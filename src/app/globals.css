@@ -1,26 +1,103 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-midnight-void: #050505;
+  --color-surface: #0a0a0a;
+  --color-surface-highlight: #1a1a1a;
+  --color-electric-lime: #ccff00;
+  --color-electric-lime-dim: #b3e600;
+  --color-text-primary: #ededed;
+  --color-text-secondary: #a1a1a1;
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui;
+  --font-serif: var(--font-playfair), ui-serif, Georgia;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pulse-slow: pulse-glow 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes pulse-glow {
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0px);
+    }
+
+    50% {
+      opacity: 0.8;
+      transform: scale(1.02);
+      filter: blur(2px);
+    }
   }
 }
 
+:root {
+  --background: var(--color-midnight-void);
+  --foreground: var(--color-text-primary);
+}
+
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Utilities for "Handcrafted" feel */
+
+
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.text-gradient {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #ededed, #a1a1a1);
+}
+
+.text-gradient-accent {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(to right, #ccff00, #9eff00);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-midnight-void);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-highlight);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333;
 }
