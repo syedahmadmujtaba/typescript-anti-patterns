@@ -6,13 +6,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { analyzeSourceCode } from './actions';
 import { AntiPatternResult } from '../lib/analyzer';
 import CodeInput from '../components/CodeInput';
+import FileUpload from '../components/FileUpload';
 import PatternCard from '../components/PatternCard';
 import { Wand2, Code2, CheckCircle2 } from 'lucide-react';
 
 export default function Home() {
+  const [mode, setMode] = useState<'paste' | 'upload'>('paste');
   const [code, setCode] = useState('');
+  const [filename, setFilename] = useState<string | undefined>(undefined);
   const [results, setResults] = useState<AntiPatternResult[] | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const handleFileLoad = (content: string, name: string) => {
+    setCode(content);
+    setFilename(name);
+  };
 
   const handleAnalyze = async () => {
     if (!code.trim()) return;
@@ -21,10 +29,17 @@ export default function Home() {
     setResults(null);
 
     // Server Action
-    const data = await analyzeSourceCode(code);
+    const data = await analyzeSourceCode(code, filename);
 
     setResults(data);
     setIsAnalyzing(false);
+  };
+
+  const handleModeChange = (newMode: 'paste' | 'upload') => {
+    setMode(newMode);
+    setCode('');
+    setFilename(undefined);
+    setResults(null);
   };
 
   return (
@@ -46,13 +61,71 @@ export default function Home() {
         </h1>
       </motion.header>
 
+      {/* Mode Toggle */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.6 }}
+        className="flex items-center gap-2 p-1 glass-panel rounded-full w-fit shrink-0"
+      >
+        <button
+          onClick={() => handleModeChange('paste')}
+          className={`
+            px-6 py-2 rounded-full text-sm font-medium transition-all duration-300
+            ${mode === 'paste'
+              ? 'bg-white text-black shadow-lg'
+              : 'text-zinc-500 hover:text-zinc-300'
+            }
+          `}
+        >
+          Paste Code
+        </button>
+        <button
+          onClick={() => handleModeChange('upload')}
+          className={`
+            px-6 py-2 rounded-full text-sm font-medium transition-all duration-300
+            ${mode === 'upload'
+              ? 'bg-white text-black shadow-lg'
+              : 'text-zinc-500 hover:text-zinc-300'
+            }
+          `}
+        >
+          Upload File
+        </button>
+      </motion.div>
+
+
 
       <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:overflow-hidden min-h-0">
 
         {/* Left Col: Input */}
-        <section className="flex flex-col gap-4 h-auto lg:h-full relative">
-          <div className="h-[60vh] lg:h-auto lg:flex-1 min-h-0">
-            <CodeInput value={code} onChange={setCode} disabled={isAnalyzing} />
+        <section className="flex flex-col gap-4 h-auto lg:h-full relative min-h-0 lg:grid lg:grid-rows-[1fr_auto]">
+          <div className="h-[60vh] lg:h-auto lg:min-h-0 relative lg:overflow-hidden">
+            <AnimatePresence mode="wait">
+              {mode === 'paste' ? (
+                <motion.div
+                  key="paste"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="h-full"
+                >
+                  <CodeInput value={code} onChange={setCode} disabled={isAnalyzing} />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="upload"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.3 }}
+                  className="h-full"
+                >
+                  <FileUpload onFileLoad={handleFileLoad} disabled={isAnalyzing} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <div className="flex justify-end shrink-0 w-full lg:w-auto">
@@ -138,8 +211,32 @@ export default function Home() {
                 className="flex flex-col gap-4 h-auto lg:h-full lg:overflow-y-auto custom-scrollbar lg:pr-4 pb-20 lg:pb-0"
               >
                 <div className="flex items-center justify-between mb-4 shrink-0 pt-8 lg:pt-0 border-t border-white/5 lg:border-none">
-                  <h3 className="text-2xl font-serif text-white">Detection Report</h3>
-                  <div className="text-zinc-500 font-mono text-sm">
+                  <div className="flex flex-col gap-1">
+                    <h3 className="text-2xl font-serif text-white">Detection Report</h3>
+                    <div className="flex items-center gap-3">
+                      {filename && (
+                        <p className="text-zinc-600 text-xs font-mono">{filename}</p>
+                      )}
+
+                      {/* Download Button - available for both upload and pasted code */}
+                      <button
+                        onClick={() => {
+                          import('../lib/pdf-generator').then(mod => {
+                            mod.generatePDF(filename || 'manual-code-analysis.ts', results);
+                          });
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-zinc-800 bg-zinc-900/50 text-xs font-medium text-zinc-400 hover:text-white hover:border-zinc-600 transition-all hover:shadow-[0_0_15px_-3px_rgba(255,255,255,0.1)] group w-fit"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-70 group-hover:opacity-100 transition-opacity">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="7 10 12 15 17 10" />
+                          <line x1="12" x2="12" y1="15" y2="3" />
+                        </svg>
+                        Download PDF
+                      </button>
+                    </div>
+                  </div>
+                  <div className="text-zinc-500 font-mono text-sm self-start mt-1">
                     {results.length} Issues Found
                   </div>
                 </div>

@@ -10,12 +10,18 @@ export interface AntiPatternResult {
     severity: 'high' | 'medium' | 'low';
 }
 
-export function analyzeCode(code: string): AntiPatternResult[] {
+export function analyzeCode(code: string, filename: string = 'temp.ts'): AntiPatternResult[] {
+    // Determine script kind based on file extension
+    const scriptKind = filename.endsWith('.tsx')
+        ? ts.ScriptKind.TSX
+        : ts.ScriptKind.TS;
+
     const sourceFile = ts.createSourceFile(
-        'temp.ts',
+        filename,
         code,
         ts.ScriptTarget.Latest,
-        true
+        true,
+        scriptKind
     );
 
     const results: AntiPatternResult[] = [];
