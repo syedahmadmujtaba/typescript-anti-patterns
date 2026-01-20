@@ -26,6 +26,24 @@ export function analyzeCode(code: string, filename: string = 'temp.ts'): AntiPat
 
     const results: AntiPatternResult[] = [];
 
+    // 0. Check for Parsing Errors (Invalid Syntax/Language)
+    // If the parser cannot understand the code (e.g. user pasted Python), we shouldn't run other checks.
+    // Cast to any to access internal parseDiagnostics which is available on the object returned by createSourceFile
+    const parseDiagnostics = (sourceFile as any).parseDiagnostics;
+    if (parseDiagnostics && parseDiagnostics.length > 0) {
+        const diagnostic = parseDiagnostics[0];
+        const line = sourceFile.getLineAndCharacterOfPosition(diagnostic.start || 0).line + 1;
+        results.push({
+            id: 'syntax-error',
+            name: 'Parsing Failed',
+            description: typeof diagnostic.messageText === 'string' ? diagnostic.messageText : 'Invalid syntax or unsupported language.',
+            line: line,
+            message: 'This does not look like valid TypeScript. Please check your syntax.',
+            severity: 'high'
+        });
+        return results; // Stop further analysis
+    }
+
     function visit(node: ts.Node) {
         // 1. Any Type Abuse
         if (node.kind === ts.SyntaxKind.AnyKeyword) {

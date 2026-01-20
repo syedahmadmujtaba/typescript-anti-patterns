@@ -261,6 +261,27 @@ export default function Home() {
               </motion.div>
             )}
 
+            {/* Active Scanners Footer */}
+            {!isAnalyzing && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mt-auto pt-6 border-t border-white/5"
+              >
+                <h4 className="text-xs font-mono text-zinc-600 uppercase tracking-widest mb-3">Active Scanners</h4>
+                <div className="flex flex-wrap gap-2 text-[10px] text-zinc-500 font-mono">
+                  {['Any Type Abuse', 'Long Parameter List', 'Magic Numbers', 'God Class', 'Callback Hell', 'Non-Null Assertion'].map((rule) => (
+                    <span key={rule} className="px-2 py-1 bg-zinc-900/50 border border-zinc-800 rounded-md">
+                      {rule}
+                    </span>
+                  ))}
+                  <span className="px-2 py-1 bg-electric-lime/10 border border-electric-lime/20 text-electric-lime rounded-md">
+                    TS/TSX Only
+                  </span>
+                </div>
+              </motion.div>
+            )}
+
           </AnimatePresence>
         </section>
       </div>
